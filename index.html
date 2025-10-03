@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard | Evolve</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Custom Tailwind CSS configuration for the color scheme
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#2dd4bf', // teal-400
+                            DEFAULT: '#14b8a6', // teal-500
+                            dark: '#0d9488', // teal-600
+                        },
+                        accent: {
+                            light: '#a3e635', // lime-400
+                            DEFAULT: '#84cc16', // lime-500
+                            dark: '#65a30d', // lime-600
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* gray-50 */
+        }
+        .st-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .dark .st-card {
+            background-color: #1e2b3b; /* slate-800 */
+        }
+        /* Custom focus ring color */
+        .focus-ring-brand {
+            --tw-ring-opacity: 1;
+            --tw-ring-color: rgb(20 184 166 / var(--tw-ring-opacity));
+        }
+        /* Active Nav Link Style */
+        .nav-link.active {
+            color: #0d9488; /* brand-dark */
+            font-weight: 600;
+        }
+        .dark .nav-link.active {
+             color: #2dd4bf; /* brand-light */
+        }
+        /* Time Filter Button Style */
+        .time-filter-btn {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .time-filter-btn.active {
+            background-color: #14b8a6; /* brand-DEFAULT */
+            color: white;
+        }
+        .time-filter-btn:not(.active) {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #475569; /* slate-600 */
+            border-color: #e2e8f0; /* slate-200 */
+        }
+        .dark .time-filter-btn:not(.active) {
+            background-color: #334155; /* slate-700 */
+            color: #cbd5e1; /* slate-300 */
+            border-color: #475569; /* slate-600 */
+        }
+    </style>
+</head>
+<body class="text-gray-800 dark:text-gray-200 antialiased dark:bg-slate-900">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-50">
+        <div class="container mx-auto max-w-6xl px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3">
+                    <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="50" fill="url(#logoGradient)"/>
+                        <defs>
+                             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2dd4bf;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M30 35 H 70 V 45 H 40 V 50 H 60 V 60 H 40 V 65 H 70 V 75 H 30 Z" fill="white"/>
+                    </svg>
+                    <span class="text-2xl font-bold text-gray-800 dark:text-white">Evolve</span>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" data-page="competitor-analysis" class="nav-link text-gray-600 dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-light font-medium transition-colors">Competitor Analysis</a>
+                    <a href="#" data-page="cross-market-comparison" class="nav-link text-gray-600 dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-light font-medium transition-colors">Cross-Market Comparison</a>
+                    <a href="#" data-page="booking-insights" class="nav-link text-gray-600 dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-light font-medium transition-colors">Booking Insights</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-600 dark:text-gray-300">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 space-y-2">
+             <a href="#" data-page="competitor-analysis" class="nav-link block hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md p-2">Competitor Analysis</a>
+             <a href="#" data-page="cross-market-comparison" class="nav-link block hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md p-2">Cross-Market Comparison</a>
+             <a href="#" data-page="booking-insights" class="nav-link block hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md p-2">Booking Insights</a>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <div class="container mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
+
+        <!-- Header & Property Selector -->
+        <header class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline">
+                <h1 id="page-title" class="text-4xl font-bold text-gray-900 dark:text-white">Competitor Analysis</h1>
+                 <p id="welcome-message" class="mt-2 sm:mt-0 text-lg font-medium text-gray-600 dark:text-gray-300"></p>
+            </div>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                 <div>
+                    <label for="property-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Your Properties</label>
+                    <select id="property-selector" class="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-brand focus-ring-brand">
+                        <!-- Options will be dynamically inserted here -->
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2" id="time-filter-controls">
+                    <button data-months="3" class="time-filter-btn">3M</button>
+                    <button data-months="6" class="time-filter-btn">6M</button>
+                    <button data-months="12" class="time-filter-btn active">12M</button>
+                    <button data-months="18" class="time-filter-btn">18M</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Competitor Analysis Page -->
+        <main id="competitor-analysis-page" class="page-content space-y-12">
+            <!-- KPI Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="st-card p-6 flex flex-col justify-between">
+                    <h3 class="owner-specific-label text-sm font-medium text-gray-500 dark:text-gray-400">Avg. Monthly Revenue</h3>
+                    <p id="owner-avg-revenue" class="text-3xl font-bold text-gray-900 dark:text-white mt-2">$0.00</p>
+                </div>
+                <div class="st-card p-6 flex flex-col justify-between">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Local Market Avg. Monthly Revenue</h3>
+                    <p id="market-avg-revenue" class="text-3xl font-bold text-gray-900 dark:text-white mt-2">$0.00</p>
+                </div>
+            </section>
+            
+            <!-- Call to Action Card -->
+            <section class="st-card p-6 bg-brand-light/20 dark:bg-brand-dark/20 border border-brand/50">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="trending-up" class="h-8 w-8 text-brand-dark dark:text-brand-light"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Boost Your Revenue Performance</h3>
+                        <p class="mt-1 text-gray-600 dark:text-gray-300">
+                            Want to increase your monthly revenue? Reach out to your dedicated Performance Advisor to discuss a personalized strategy. 
+                            <a href="mailto:success@evolve.com" class="font-bold text-brand-dark dark:text-brand-light hover:underline">Click here to send an email.</a>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart and Competitors Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <section class="lg:col-span-2 st-card p-6">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Monthly Revenue vs. Local Market Average</h3>
+                    <div class="relative h-80 sm:h-96"><canvas id="revenue-chart"></canvas></div>
+                </section>
+                <section class="st-card p-6">
+                     <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Direct Competitor Analysis</h3>
+                     <div id="competitors-list" class="space-y-6"></div>
+                </section>
+            </div>
+        </main>
+        
+        <!-- Cross-Market Comparison Page -->
+        <main id="cross-market-comparison-page" class="page-content space-y-12 hidden">
+             <div class="st-card p-6">
+                 <div class="mb-6 p-4 bg-gray-100 dark:bg-slate-700 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Your Property's Average Rate Per Night</h4>
+                    <p id="property-avg-rate-display" class="text-2xl font-bold text-brand-dark dark:text-brand-light mt-1">$0</p>
+                </div>
+                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Market Snapshot</h3>
+                 <div id="market-snapshot-table"></div>
+             </div>
+        </main>
+
+        <!-- Booking Insights Page -->
+        <main id="booking-insights-page" class="page-content space-y-12 hidden">
+             <!-- KPI Cards for Occupancy -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="st-card p-6 flex flex-col justify-between">
+                    <h3 class="owner-specific-label text-sm font-medium text-gray-500 dark:text-gray-400">Avg. Occupancy Rate</h3>
+                    <p id="owner-avg-occupancy" class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0%</p>
+                </div>
+                <div class="st-card p-6 flex flex-col justify-between">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Local Market Avg. Occupancy Rate</h3>
+                    <p id="market-avg-occupancy" class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0%</p>
+                </div>
+            </section>
+             <!-- Occupancy Chart -->
+            <section class="st-card p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Local Market Occupancy</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Compare your property's monthly occupancy rate against the average for your local market.</p>
+                <div class="relative h-80 sm:h-96"><canvas id="occupancy-chart"></canvas></div>
+            </section>
+            <section class="st-card p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Property Revenue Trend vs. Major Markets</h3>
+                <div class="relative h-80 sm:h-96"><canvas id="cross-market-chart"></canvas></div>
+            </section>
+            <section class="st-card p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Cross-Market Occupancy Trends</h3>
+                <div class="relative h-80 sm:h-96"><canvas id="future-occupancy-chart"></canvas></div>
+            </section>
+            <section class="st-card p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Cross-Market Booking Window Trends</h3>
+                <div class="relative h-80 sm:h-96"><canvas id="booking-window-chart"></canvas></div>
+            </section>
+             <section class="st-card p-6">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Cross-Market Cancellation Trends</h3>
+                <div class="relative h-80 sm:h-96"><canvas id="cancellation-chart"></canvas></div>
+            </section>
+        </main>
+        
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>&copy; 2025 Evolve Vacation Rentals. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURATION ---
+            const OWNER_NAME = "John Smith";
+            const CURRENT_OWNER_ID = 'owner-123';
+            const MARKET_COLORS = {
+                'Your Property': '#fbbf24', // Gold
+                'Baytown': '#10b981', 
+                'Galveston': '#8b5cf6', 
+                'Myrtle Beach, SC': '#3b82f6', 
+                'Kissimmee, FL': '#f97316', 
+                'Scottsdale, AZ': '#ec4899', 
+                'Cape Coral, FL': '#06b6d4', 
+                'Branson, MO': '#d946ef', 
+                'Phoenix, AZ': '#f59e0b', 
+                'Panama City Beach, FL': '#2dd4bf', 
+                'Lake Havasu City, AZ': '#ef4444', 
+                'Sevierville, TN': '#84cc16',
+                'default': '#64748b'
+            };
+
+            // --- RAW CSV DATA ---
+            const csvData = `listing_id,owner_id,property_address,market,zip_code,bedrooms,bathrooms,guest_count,amenities,month,revenue,avg_occupancy,booking_window_days,cancellation_rate,avg_stay_length,avg_nightly_rate
+a0G4P00003skXqnUAE,owner-123,"123 Sunny Ln, Baytown, TX",Baytown,77521,3,2,6,"Pool,WiFi",2025-10-01,3066.99,0.55,45,0.08,4.1,185.88
+a0G4P00003oEB44UAG,owner-123,"789 Palm St, Baytown, TX",Baytown,77520,4,3,8,"WiFi,Pet Friendly",2025-11-01,1376.8,0.60,48,0.07,4.5,76.49
+a0G4P00003oC5I9UAK,owner-123,"321 Coral Way, Baytown, TX",Baytown,77521,3,2,6,"Pool,Hot Tub,WiFi",2025-12-01,7268.83,0.65,55,0.06,4.2,372.76
+a0G4P00003mWhZkUAK,owner-abc,"456 Ocean Dr, Galveston, TX",Galveston,77550,3,2,6,"Pool,WiFi",2025-10-01,2864.75,0.65,60,0.05,5.2,146.91
+a0G4P00003tA5wtUAC,owner-abc,"555 Sand Dune Ct, Galveston, TX",Galveston,77551,4,3,8,"Pool,Hot Tub,WiFi",2025-11-01,10533.37,0.78,75,0.04,5.8,449.12
+mb-001,owner-sc,"101 Grand Strand, Myrtle Beach, SC","Myrtle Beach, SC",29577,2,2,6,"Pool,WiFi",2025-10-01,9500,0.85,70,0.05,5.5,310
+ks-001,owner-fl,"202 Disney Wy, Kissimmee, FL","Kissimmee, FL",34747,5,4,12,"Pool,Hot Tub,WiFi",2025-11-01,18000,0.92,130,0.03,7.1,420
+sc-001,owner-az,"303 Cactus Rd, Scottsdale, AZ","Scottsdale, AZ",85255,4,3,8,"Pool,Fireplace",2025-12-01,22000,0.80,95,0.04,4.5,610
+cc-001,owner-fl,"404 Canal Ct, Cape Coral, FL","Cape Coral, FL",33914,3,2,6,"Pool,WiFi",2026-01-01,11000,0.88,110,0.03,6.5,350
+br-001,owner-mo,"505 Showboat Ln, Branson, MO","Branson, MO",65616,2,2,4,"WiFi,Pet Friendly",2026-02-01,6000,0.75,50,0.08,3.2,190
+phx-001,owner-az,"606 Sun Valley, Phoenix, AZ","Phoenix, AZ",85001,3,2.5,7,"Pool",2026-03-01,13000,0.78,65,0.06,4.0,420
+pcb-001,owner-fl,"707 Emerald Coast, Panama City Beach, FL","Panama City Beach, FL",32413,2,2,6,"Pool,WiFi",2026-04-01,16000,0.95,140,0.02,6.8,390
+lhc-001,owner-az,"808 Desert Dr, Lake Havasu City, AZ","Lake Havasu City, AZ",86403,4,3,10,"Pool,Hot Tub",2026-05-01,19000,0.82,100,0.04,5.1,450
+sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"Hot Tub,Fireplace,WiFi",2026-06-01,14500,0.93,115,0.02,4.8,400`;
+
+            let parsedData = [];
+            let listingDetailsMap = new Map();
+            let revenueChartInstance, occupancyChartInstance, crossMarketChartInstance, futureOccupancyChartInstance, bookingWindowChartInstance, cancellationChartInstance;
+            let currentTimeFilter = 12; // Default to 12 months
+            
+            // --- DOM ELEMENTS ---
+            const propertySelector = document.getElementById('property-selector');
+            const pageTitle = document.getElementById('page-title');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const timeFilterControls = document.getElementById('time-filter-controls');
+            const ownerAvgRevenueEl = document.getElementById('owner-avg-revenue');
+            const marketAvgRevenueEl = document.getElementById('market-avg-revenue');
+            const competitorsListEl = document.getElementById('competitors-list');
+            const ownerAvgOccupancyEl = document.getElementById('owner-avg-occupancy');
+            const marketAvgOccupancyEl = document.getElementById('market-avg-occupancy');
+            const marketSnapshotTableEl = document.getElementById('market-snapshot-table');
+            const propertyAvgRateDisplay = document.getElementById('property-avg-rate-display');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageContents = document.querySelectorAll('.page-content');
+            const ownerSpecificLabels = document.querySelectorAll('.owner-specific-label');
+
+            // --- DATA PROCESSING ---
+            const parseCSV = (csvText) => {
+                const lines = csvText.trim().split('\n');
+                const headers = lines[0].split(',');
+                return lines.slice(1).map(line => {
+                    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                    return headers.reduce((obj, header, index) => {
+                        let value = (values[index] || '').trim().replace(/^"|"$/g, '');
+                        if (['listing_id', 'owner_id', 'property_address', 'market', 'zip_code', 'amenities', 'month'].includes(header)) {
+                            obj[header] = value;
+                        } else {
+                            obj[header] = parseFloat(value) || 0;
+                        }
+                        return obj;
+                    }, {});
+                });
+            };
+            
+            const getFilteredData = () => {
+                const now = new Date('2025-10-01T00:00:00'); 
+                const endDate = new Date(now);
+                endDate.setMonth(endDate.getMonth() + currentTimeFilter);
+                
+                return parsedData.filter(row => {
+                    const rowDate = new Date(row.month);
+                    return rowDate >= now && rowDate <= endDate;
+                });
+            }
+
+            const processDataForProperty = (listingId) => {
+                const selectedProperty = listingDetailsMap.get(listingId);
+                if (!selectedProperty) return null;
+
+                const filteredData = getFilteredData();
+                const monthlyData = {};
+                const localMarketMonthlyData = {};
+                const competitorTotals = {};
+                const selectedMarket = selectedProperty.market;
+                
+                const competitorOccupancyPoints = [];
+
+                filteredData.forEach((row) => {
+                    const month = row.month;
+                    if (row.listing_id === listingId) {
+                         if (!monthlyData[month]) monthlyData[month] = { revenue: 0, occupancy: 0 };
+                         monthlyData[month].revenue += row.revenue;
+                         monthlyData[month].occupancy += row.avg_occupancy;
+                    }
+
+                    if (row.market === selectedMarket) {
+                         if (!localMarketMonthlyData[month]) localMarketMonthlyData[month] = { revenue: 0, occupancy: 0, count: 0 };
+                         localMarketMonthlyData[month].revenue += row.revenue;
+                         localMarketMonthlyData[month].occupancy += row.avg_occupancy;
+                         localMarketMonthlyData[month].count++;
+                         
+                         if(row.listing_id !== listingId) {
+                            const totalCompetitorRevenue = parsedData.filter(pr => pr.listing_id === row.listing_id).reduce((sum, r) => sum + r.revenue, 0);
+                            competitorTotals[row.listing_id] = totalCompetitorRevenue;
+                         }
+                    }
+                });
+                
+                const sortedMonths = [...new Set(filteredData.map(r => r.month))].sort();
+                
+                const labels = sortedMonths.map(m => new Date(m).toLocaleString('default', { month: 'short', year: 'numeric' }));
+                const propertyRevenueByMonth = sortedMonths.map(m => monthlyData[m] ? monthlyData[m].revenue : null);
+                const localMarketRevenueByMonth = sortedMonths.map(m => localMarketMonthlyData[m] ? localMarketMonthlyData[m].revenue / localMarketMonthlyData[m].count : null);
+                const propertyOccupancyByMonth = sortedMonths.map(m => monthlyData[m] ? monthlyData[m].occupancy : null);
+                const localMarketOccupancyByMonth = sortedMonths.map(m => localMarketMonthlyData[m] ? localMarketMonthlyData[m].occupancy / localMarketMonthlyData[m].count : null);
+
+                return {
+                    listingId, labels,
+                    propertyRevenue: { data: propertyRevenueByMonth, avg: propertyRevenueByMonth.filter(v => v !== null).reduce((a, b) => a + b, 0) / (propertyRevenueByMonth.filter(v => v !== null).length || 1) },
+                    localMarketRevenue: { data: localMarketRevenueByMonth, avg: localMarketRevenueByMonth.filter(v => v !== null).reduce((a, b) => a + b, 0) / (localMarketRevenueByMonth.length || 1) },
+                    propertyOccupancy: { data: propertyOccupancyByMonth, avg: propertyOccupancyByMonth.filter(v => v !== null).reduce((a, b) => a + b, 0) / (propertyOccupancyByMonth.filter(v => v !== null).length || 1) },
+                    localMarketOccupancy: { data: localMarketOccupancyByMonth, avg: localMarketOccupancyByMonth.filter(v => v !== null).reduce((a, b) => a + b, 0) / (localMarketOccupancyByMonth.length || 1) },
+                    competitors: Object.entries(competitorTotals).sort(([, a], [, b]) => b - a).slice(0, 5),
+                    currentMarket: selectedMarket,
+                    bedrooms: selectedProperty.bedrooms
+                };
+            };
+            
+            const processMarketSnapshotData = () => {
+                 const marketSnapshotData = {};
+                listingDetailsMap.forEach(row => {
+                    const market = row.market;
+                    if (!marketSnapshotData[market]) marketSnapshotData[market] = { totalStay: 0, totalRate: 0, totalGuests: 0, count: 0 };
+                    marketSnapshotData[market].totalStay += row.avg_stay_length;
+                    marketSnapshotData[market].totalRate += row.avg_nightly_rate;
+                    marketSnapshotData[market].totalGuests += row.guest_count;
+                    marketSnapshotData[market].count++;
+                });
+                
+                return Object.entries(marketSnapshotData).map(([market, data]) => ({
+                    market,
+                    avgStay: Math.round(data.totalStay / data.count),
+                    avgRate: Math.round(data.totalRate / data.count),
+                    avgGuests: Math.round(data.totalGuests / data.count)
+                })).sort((a,b) => b.avgRate - a.avgRate);
+            };
+
+            const processAllMarketMonthlyData = (propertyRevenueData) => {
+                const filteredData = getFilteredData();
+                const allMonths = [...new Set(filteredData.map(row => row.month))].sort();
+                const allMarkets = [...new Set(listingDetailsMap.values())].map(p => p.market).filter((v, i, a) => a.indexOf(v) === i);
+                
+                const datasets = allMarkets.map(market => {
+                    const marketMonthlyRevenue = {};
+                    filteredData.filter(row => row.market === market).forEach(row => {
+                        if (!marketMonthlyRevenue[row.month]) {
+                            marketMonthlyRevenue[row.month] = { total: 0, count: 0 };
+                        }
+                        marketMonthlyRevenue[row.month].total += row.revenue;
+                        marketMonthlyRevenue[row.month].count++;
+                    });
+                    const data = allMonths.map(month => {
+                        const monthData = marketMonthlyRevenue[month];
+                        return monthData ? monthData.total / monthData.count : null;
+                    });
+                    return { label: market, data: data, fill: false, tension: 0.3 };
+                });
+                
+                datasets.unshift({ label: 'Your Property', data: propertyRevenueData.data, fill: false, tension: 0.3 });
+                return {
+                    labels: allMonths.map(m => new Date(m).toLocaleString('default', { month: 'short', year: 'numeric' })),
+                    datasets
+                };
+            };
+            
+             const processAllMarketBookingInsights = () => {
+                const filteredData = getFilteredData();
+                const allMonths = [...new Set(filteredData.map(row => row.month))].sort();
+                const allMarkets = [...new Set(listingDetailsMap.values())].map(p => p.market).filter((v, i, a) => a.indexOf(v) === i);
+                
+                const processMetric = (metric, isRate) => allMarkets.map(market => {
+                    const marketMonthlyData = {};
+                    filteredData.filter(row => row.market === market).forEach(row => {
+                        if (!marketMonthlyData[row.month]) marketMonthlyData[row.month] = { total: 0, count: 0 };
+                        marketMonthlyData[row.month].total += row[metric];
+                        marketMonthlyData[row.month].count++;
+                    });
+                    const data = allMonths.map(month => {
+                        const monthData = marketMonthlyData[month];
+                        return monthData ? (monthData.total / monthData.count) * (isRate ? 100 : 1) : null;
+                    });
+                    return { label: market, data };
+                });
+
+                return {
+                    labels: allMonths.map(m => new Date(m).toLocaleString('default', { month: 'short', year: 'numeric' })),
+                    occupancy: processMetric('avg_occupancy', true),
+                    bookingWindow: processMetric('booking_window_days', false),
+                    cancellation: processMetric('cancellation_rate', true)
+                };
+            };
+            
+            // --- UI & CHART RENDERING ---
+            const renderRevenueDashboard = (analysis) => {
+                if (!revenueChartInstance) return;
+                const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+                ownerAvgRevenueEl.textContent = formatter.format(analysis.propertyRevenue.avg);
+                marketAvgRevenueEl.textContent = formatter.format(analysis.localMarketRevenue.avg);
+                
+                competitorsListEl.innerHTML = analysis.competitors.map(([id, total], index) => {
+                    const competitorDetails = listingDetailsMap.get(id);
+                    if (!competitorDetails) return '';
+
+                    const fullAddress = competitorDetails.property_address;
+                    const zipCode = competitorDetails.zip_code;
+                    let displayLocation = fullAddress;
+
+                    if (fullAddress) {
+                        const parts = fullAddress.split(',');
+                        if (parts.length >= 3) displayLocation = parts.slice(1).join(',').trim();
+                    }
+
+                    const amenitiesToCompare = ['Pool', 'Hot Tub', 'Pet Friendly'];
+                    const ownerAmenities = listingDetailsMap.get(analysis.listingId).amenities.split(',');
+                    const competitorAmenities = competitorDetails.amenities.split(',');
+                    
+                    const amenityHTML = amenitiesToCompare.map(amenity => `
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-gray-500 dark:text-gray-400">${amenity}</span>
+                            <div class="flex items-center">
+                                ${ownerAmenities.includes(amenity) ? '<i data-lucide="check" class="w-4 h-4 text-green-500"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500"></i>'}
+                                <span class="mx-1 text-gray-300 dark:text-gray-600">|</span>
+                                ${competitorAmenities.includes(amenity) ? '<i data-lucide="check" class="w-4 h-4 text-green-500"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500"></i>'}
+                            </div>
+                        </div>`).join('');
+
+                    const rateDiff = competitorDetails.avg_nightly_rate - listingDetailsMap.get(analysis.listingId).avg_nightly_rate;
+                    const guestDiff = competitorDetails.guest_count - listingDetailsMap.get(analysis.listingId).guest_count;
+
+                    return `
+                    <div class="p-3 border rounded-lg dark:border-slate-700">
+                        <div class="flex items-center justify-between text-sm font-semibold">
+                             <span class="text-gray-700 dark:text-gray-300 truncate" title="${fullAddress}">${displayLocation}</span>
+                             <span class="text-gray-900 dark:text-white">${formatter.format(total)}</span>
+                        </div>
+                        <div class="mt-3 space-y-2">
+                             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <span>Avg. Rate: <span class="font-semibold ${rateDiff > 0 ? 'text-green-500' : 'text-red-500'}">${formatter.format(competitorDetails.avg_nightly_rate)} (${rateDiff > 0 ? '+' : ''}${formatter.format(rateDiff)})</span></span>
+                                <span>Sleeps: <span class="font-semibold text-gray-700 dark:text-gray-300">${competitorDetails.guest_count} (${guestDiff > 0 ? '+' : ''}${guestDiff})</span></span>
+                             </div>
+                             <div class="text-xs text-gray-500 dark:text-gray-400 flex justify-end items-center">Your Property | Competitor</div>
+                             ${amenityHTML}
+                        </div>
+                    </div>`
+                }).join('') || `<p class="text-sm text-gray-500 dark:text-gray-400">No competitor data for this market.</p>`;
+                lucide.createIcons();
+                
+                revenueChartInstance.data.labels = analysis.labels;
+                revenueChartInstance.data.datasets[0].data = analysis.propertyRevenue.data;
+                revenueChartInstance.data.datasets[1].data = analysis.localMarketRevenue.data;
+                revenueChartInstance.update();
+            };
+
+            const renderOccupancyDashboard = (analysis) => {
+                if (!occupancyChartInstance) return;
+                ownerAvgOccupancyEl.textContent = `${(analysis.propertyOccupancy.avg * 100).toFixed(0)}%`;
+                marketAvgOccupancyEl.textContent = `${(analysis.localMarketOccupancy.avg * 100).toFixed(0)}%`;
+                
+                occupancyChartInstance.data.labels = analysis.labels;
+                occupancyChartInstance.data.datasets[0].data = analysis.propertyOccupancy.data.map(d=> d ? d*100 : null);
+                occupancyChartInstance.data.datasets[1].data = analysis.localMarketOccupancy.data.map(d=>d*100);
+                occupancyChartInstance.update();
+            };
+            
+            const renderBookingInsightsDashboard = (analysis) => {
+                const allMarketInsights = processAllMarketBookingInsights();
+                const currentMarket = analysis.currentMarket;
+                
+                const updateChart = (chartInstance, datasets) => {
+                    if(!chartInstance) return;
+                    chartInstance.data.labels = allMarketInsights.labels;
+                    chartInstance.data.datasets = datasets.map(dataset => {
+                        const color = MARKET_COLORS[dataset.label] || MARKET_COLORS['default'];
+                        const isCurrent = dataset.label === currentMarket;
+                        return { ...dataset, borderColor: color, borderWidth: isCurrent ? 4 : 2, pointBackgroundColor: color };
+                    });
+                    chartInstance.update();
+                };
+
+                updateChart(futureOccupancyChartInstance, allMarketInsights.occupancy);
+                updateChart(bookingWindowChartInstance, allMarketInsights.bookingWindow);
+                updateChart(cancellationChartInstance, allMarketInsights.cancellation);
+            };
+
+            const renderCrossMarketDashboard = (analysis) => {
+                const snapshotData = processMarketSnapshotData();
+                const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                
+                const propertyData = parsedData.filter(p => p.listing_id === analysis.listingId);
+                const avgRate = propertyData.reduce((sum, row) => sum + row.avg_nightly_rate, 0) / (propertyData.length || 1);
+                propertyAvgRateDisplay.textContent = currencyFormatter.format(avgRate);
+                
+                marketSnapshotTableEl.innerHTML = `
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b dark:border-slate-700">
+                                <th class="pb-2 text-left font-semibold text-gray-600 dark:text-gray-400">Market</th>
+                                <th class="pb-2 text-right font-semibold text-gray-600 dark:text-gray-400">Avg. Guests</th>
+                                <th class="pb-2 text-right font-semibold text-gray-600 dark:text-gray-400">Avg. Stay</th>
+                                <th class="pb-2 text-right font-semibold text-gray-600 dark:text-gray-400">Average Rate Per Night</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${snapshotData.map(item => `
+                                <tr class="border-b dark:border-slate-700">
+                                    <td class="py-2 text-gray-700 dark:text-gray-300">${item.market}</td>
+                                    <td class="py-2 text-right font-semibold text-gray-900 dark:text-white">${item.avgGuests}</td>
+                                    <td class="py-2 text-right font-semibold text-gray-900 dark:text-white">${item.avgStay} nights</td>
+                                    <td class="py-2 text-right font-semibold text-gray-900 dark:text-white">${currencyFormatter.format(item.avgRate)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` || `<p class="text-sm text-gray-500 dark:text-gray-400">No stay data available.</p>`;
+
+                 const allMarketData = processAllMarketMonthlyData(analysis.propertyRevenue);
+                 
+                 if (crossMarketChartInstance) {
+                    crossMarketChartInstance.data.labels = allMarketData.labels;
+                    crossMarketChartInstance.data.datasets = allMarketData.datasets.map(dataset => {
+                        const color = MARKET_COLORS[dataset.label] || MARKET_COLORS['default'];
+                        return { ...dataset, borderColor: color, borderWidth: dataset.label === 'Your Property' ? 4 : 2, pointBackgroundColor: color };
+                    });
+                    crossMarketChartInstance.update();
+                }
+            };
+            
+            const initializeCharts = () => {
+                 if (revenueChartInstance) revenueChartInstance.destroy();
+                 if (occupancyChartInstance) occupancyChartInstance.destroy();
+                 if (crossMarketChartInstance) crossMarketChartInstance.destroy();
+                 if (futureOccupancyChartInstance) futureOccupancyChartInstance.destroy();
+                 if (bookingWindowChartInstance) bookingWindowChartInstance.destroy();
+                 if (cancellationChartInstance) cancellationChartInstance.destroy();
+
+                const chartOptions = (formatter, legendDisplay = true, isBar=false) => ({
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { ticks: { callback: formatter, color: '#94a3b8' }, grid: { color: 'rgba(203, 213, 225, 0.1)' } }, x: { ticks: {color: '#94a3b8'}, grid: { display: isBar } } },
+                    plugins: { legend: { display: legendDisplay, labels: { color: '#94a3b8' } } },
+                });
+
+                revenueChartInstance = new Chart(document.getElementById('revenue-chart').getContext('2d'), {
+                    type: 'line', data: { labels: [], datasets: [
+                        { label: `${OWNER_NAME}'s Revenue`, borderColor: '#14b8a6', backgroundColor: 'rgba(20, 184, 166, 0.1)', tension: 0.3, fill: true },
+                        { label: 'Local Market Average', borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.1)', tension: 0.3, borderDash: [5, 5], fill: true }
+                    ]}, options: chartOptions(value => '$' + value.toLocaleString())
+                });
+
+                occupancyChartInstance = new Chart(document.getElementById('occupancy-chart').getContext('2d'), {
+                    type: 'bar', data: { labels: [], datasets: [
+                        { label: `${OWNER_NAME}'s Occupancy %`, data: [], backgroundColor: '#14b8a6' },
+                        { label: 'Local Market Average %', data: [], backgroundColor: '#64748b' }
+                    ]}, options: chartOptions(value => value + '%', true, true)
+                });
+                
+                futureOccupancyChartInstance = new Chart(document.getElementById('future-occupancy-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + '%')});
+                bookingWindowChartInstance = new Chart(document.getElementById('booking-window-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + ' days')});
+                cancellationChartInstance = new Chart(document.getElementById('cancellation-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + '%')});
+
+                crossMarketChartInstance = new Chart(document.getElementById('cross-market-chart').getContext('2d'), {
+                    type: 'line', data: { labels: [], datasets: []}, 
+                    options: chartOptions(value => '$' + value.toLocaleString())
+                });
+            }
+
+            const updateAllDashboards = (listingId) => {
+                if (!listingId) return;
+                const analysis = processDataForProperty(listingId);
+                if (!analysis) return;
+                renderRevenueDashboard(analysis);
+                renderOccupancyDashboard(analysis);
+                renderCrossMarketDashboard(analysis);
+                renderBookingInsightsDashboard(analysis);
+            };
+
+            const switchPage = (pageId) => {
+                pageContents.forEach(p => p.classList.add('hidden'));
+                document.getElementById(`${pageId}-page`).classList.remove('hidden');
+                navLinks.forEach(link => link.classList.toggle('active', link.dataset.page === pageId));
+                pageTitle.textContent = pageId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                mobileMenu.classList.add('hidden');
+
+                if (pageId === 'cross-market-comparison') {
+                    timeFilterControls.classList.add('hidden');
+                } else {
+                    timeFilterControls.classList.remove('hidden');
+                }
+            };
+
+            const populateDropdowns = () => {
+                const ownerProperties = new Map();
+                listingDetailsMap.forEach((details, id) => {
+                     if (details.owner_id === CURRENT_OWNER_ID) {
+                        ownerProperties.set(id, details.property_address);
+                    }
+                });
+                
+                const sortedProperties = [...ownerProperties.entries()].sort((a,b) => a[1].localeCompare(b[1]));
+                if (sortedProperties.length === 0) {
+                     propertySelector.innerHTML = `<option disabled>No properties found for your account.</option>`;
+                     return null;
+                }
+                propertySelector.innerHTML = sortedProperties.map(([id, address]) => `<option value="${id}">${address}</option>`).join('');
+
+                return sortedProperties[0][0];
+            };
+            
+            const personalizeUI = () => {
+                welcomeMessage.textContent = `Welcome, ${OWNER_NAME}`;
+                ownerSpecificLabels.forEach(label => {
+                    label.textContent = `${OWNER_NAME}'s ${label.textContent}`;
+                });
+            };
+
+            // --- INITIALIZATION ---
+            lucide.createIcons();
+            parsedData = parseCSV(csvData);
+            
+            // Create a map of unique listing details for easier lookup
+            parsedData.forEach(p => {
+                if (!listingDetailsMap.has(p.listing_id)) {
+                    listingDetailsMap.set(p.listing_id, p);
+                }
+            });
+            
+            personalizeUI();
+            initializeCharts();
+            const initialId = populateDropdowns();
+            if (initialId) {
+                updateAllDashboards(initialId);
+            }
+            switchPage('competitor-analysis');
+
+            // --- EVENT LISTENERS ---
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            propertySelector.addEventListener('change', (e) => updateAllDashboards(e.target.value));
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchPage(link.dataset.page);
+                });
+            });
+            timeFilterControls.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentTimeFilter = parseInt(e.target.dataset.months, 10);
+                    timeFilterControls.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const currentListingId = propertySelector.value;
+                    if (currentListingId) {
+                        updateAllDashboards(currentListingId);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
