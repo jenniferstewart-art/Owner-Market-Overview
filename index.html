@@ -89,18 +89,8 @@
         <div class="container mx-auto max-w-6xl px-4">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
-                <a href="#" class="flex items-center space-x-3">
-                    <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="50" cy="50" r="50" fill="url(#logoGradient)"/>
-                        <defs>
-                             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#2dd4bf;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M30 35 H 70 V 45 H 40 V 50 H 60 V 60 H 40 V 65 H 70 V 75 H 30 Z" fill="white"/>
-                    </svg>
-                    <span class="text-2xl font-bold text-gray-800 dark:text-white">Evolve</span>
+                <a href="https://evolve.com/" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3">
+                    <img src="https://mma.prnewswire.com/media/518256/Evolve_Vacation_Rental_Network_Logo.jpg?w=200" alt="Evolve Logo" class="h-9 w-auto">
                 </a>
 
                 <!-- Desktop Menu -->
@@ -202,10 +192,6 @@
                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Market Snapshot</h3>
                  <div id="market-snapshot-table"></div>
              </div>
-        </main>
-
-        <!-- Booking Insights Page -->
-        <main id="booking-insights-page" class="page-content space-y-12 hidden">
              <!-- KPI Cards for Occupancy -->
             <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="st-card p-6 flex flex-col justify-between">
@@ -223,6 +209,10 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Compare your property's monthly occupancy rate against the average for your local market.</p>
                 <div class="relative h-80 sm:h-96"><canvas id="occupancy-chart"></canvas></div>
             </section>
+        </main>
+
+        <!-- Booking Insights Page -->
+        <main id="booking-insights-page" class="page-content space-y-12 hidden">
             <section class="st-card p-6">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Property Revenue Trend vs. Major Markets</h3>
                 <div class="relative h-80 sm:h-96"><canvas id="cross-market-chart"></canvas></div>
@@ -286,7 +276,7 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
 
             let parsedData = [];
             let listingDetailsMap = new Map();
-            let revenueChartInstance, occupancyChartInstance, crossMarketChartInstance, futureOccupancyChartInstance, bookingWindowChartInstance, cancellationChartInstance;
+            let chartInstances = {};
             let currentTimeFilter = 12; // Default to 12 months
             
             // --- DOM ELEMENTS ---
@@ -463,7 +453,6 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
             
             // --- UI & CHART RENDERING ---
             const renderRevenueDashboard = (analysis) => {
-                if (!revenueChartInstance) return;
                 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
                 ownerAvgRevenueEl.textContent = formatter.format(analysis.propertyRevenue.avg);
                 marketAvgRevenueEl.textContent = formatter.format(analysis.localMarketRevenue.avg);
@@ -515,45 +504,34 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                 }).join('') || `<p class="text-sm text-gray-500 dark:text-gray-400">No competitor data for this market.</p>`;
                 lucide.createIcons();
                 
-                revenueChartInstance.data.labels = analysis.labels;
-                revenueChartInstance.data.datasets[0].data = analysis.propertyRevenue.data;
-                revenueChartInstance.data.datasets[1].data = analysis.localMarketRevenue.data;
-                revenueChartInstance.update();
-            };
-
-            const renderOccupancyDashboard = (analysis) => {
-                if (!occupancyChartInstance) return;
-                ownerAvgOccupancyEl.textContent = `${(analysis.propertyOccupancy.avg * 100).toFixed(0)}%`;
-                marketAvgOccupancyEl.textContent = `${(analysis.localMarketOccupancy.avg * 100).toFixed(0)}%`;
-                
-                occupancyChartInstance.data.labels = analysis.labels;
-                occupancyChartInstance.data.datasets[0].data = analysis.propertyOccupancy.data.map(d=> d ? d*100 : null);
-                occupancyChartInstance.data.datasets[1].data = analysis.localMarketOccupancy.data.map(d=>d*100);
-                occupancyChartInstance.update();
+                const chart = chartInstances['revenue-chart'];
+                if(chart) {
+                    chart.data.labels = analysis.labels;
+                    chart.data.datasets[0].data = analysis.propertyRevenue.data;
+                    chart.data.datasets[1].data = analysis.localMarketRevenue.data;
+                    chart.update();
+                }
             };
             
             const renderBookingInsightsDashboard = (analysis) => {
                 const allMarketInsights = processAllMarketBookingInsights();
                 const currentMarket = analysis.currentMarket;
                 
-                const updateChart = (chartInstance, datasets, isBar = false) => {
-                    if(!chartInstance) return;
-                    chartInstance.data.labels = allMarketInsights.labels;
-                    chartInstance.data.datasets = datasets.map(dataset => {
+                const updateChart = (chartInstanceKey, datasets) => {
+                    const chart = chartInstances[chartInstanceKey];
+                    if(!chart) return;
+                    chart.data.labels = allMarketInsights.labels;
+                    chart.data.datasets = datasets.map(dataset => {
                         const color = MARKET_COLORS[dataset.label] || MARKET_COLORS['default'];
                         const isCurrent = dataset.label === currentMarket;
-                        
-                        if (isBar) {
-                            return { ...dataset, backgroundColor: color, borderWidth: isCurrent ? 2 : 0, borderColor: '#f59e0b' };
-                        }
-                        return { ...dataset, borderColor: color, borderWidth: isCurrent ? 4 : 2, pointBackgroundColor: color, tension: 0.3, fill: false };
+                        return { ...dataset, borderColor: color, borderWidth: isCurrent ? 4 : 2, pointBackgroundColor: color };
                     });
-                    chartInstance.update();
+                    chart.update();
                 };
 
-                updateChart(futureOccupancyChartInstance, allMarketInsights.occupancy);
-                updateChart(bookingWindowChartInstance, allMarketInsights.bookingWindow);
-                updateChart(cancellationChartInstance, allMarketInsights.cancellation);
+                updateChart('future-occupancy-chart', allMarketInsights.occupancy);
+                updateChart('booking-window-chart', allMarketInsights.bookingWindow);
+                updateChart('cancellation-chart', allMarketInsights.cancellation);
             };
 
             const renderCrossMarketDashboard = (analysis) => {
@@ -588,25 +566,39 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                 ` || `<p class="text-sm text-gray-500 dark:text-gray-400">No stay data available.</p>`;
 
                  const allMarketData = processAllMarketMonthlyData(analysis.propertyRevenue);
-                 
-                 if (crossMarketChartInstance) {
-                    crossMarketChartInstance.data.labels = allMarketData.labels;
-                    crossMarketChartInstance.data.datasets = allMarketData.datasets.map(dataset => {
+                 const chart = chartInstances['cross-market-chart'];
+                 if (chart) {
+                    chart.data.labels = allMarketData.labels;
+                    chart.data.datasets = allMarketData.datasets.map(dataset => {
                         const color = MARKET_COLORS[dataset.label] || MARKET_COLORS['default'];
                         return { ...dataset, borderColor: color, borderWidth: dataset.label === 'Your Property' ? 4 : 2, pointBackgroundColor: color };
                     });
-                    crossMarketChartInstance.update();
+                    chart.update();
+                }
+
+                ownerAvgOccupancyEl.textContent = `${(analysis.propertyOccupancy.avg * 100).toFixed(0)}%`;
+                marketAvgOccupancyEl.textContent = `${(analysis.localMarketOccupancy.avg * 100).toFixed(0)}%`;
+                
+                const occupancyChart = chartInstances['occupancy-chart'];
+                if (occupancyChart) {
+                    occupancyChart.data.labels = analysis.labels;
+                    occupancyChart.data.datasets[0].data = analysis.propertyOccupancy.data.map(d=> d ? d*100 : null);
+                    occupancyChart.data.datasets[1].data = analysis.localMarketOccupancy.data.map(d=>d*100);
+                    occupancyChart.update();
                 }
             };
             
-            const initializeCharts = () => {
-                 if (revenueChartInstance) revenueChartInstance.destroy();
-                 if (occupancyChartInstance) occupancyChartInstance.destroy();
-                 if (crossMarketChartInstance) crossMarketChartInstance.destroy();
-                 if (futureOccupancyChartInstance) futureOccupancyChartInstance.destroy();
-                 if (bookingWindowChartInstance) bookingWindowChartInstance.destroy();
-                 if (cancellationChartInstance) cancellationChartInstance.destroy();
-
+            const initializeChart = (id, type, options, datasets) => {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (chartInstances[id]) {
+                    chartInstances[id].destroy();
+                }
+                chartInstances[id] = new Chart(ctx, { type, data: { labels: [], datasets }, options });
+            };
+            
+            const initializeAllCharts = () => {
                 const chartOptions = (formatter, legendDisplay = true, isBar=false) => ({
                     responsive: true,
                     maintainAspectRatio: false,
@@ -614,28 +606,21 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                     plugins: { legend: { display: legendDisplay, labels: { color: '#94a3b8' } } },
                 });
 
-                revenueChartInstance = new Chart(document.getElementById('revenue-chart').getContext('2d'), {
-                    type: 'line', data: { labels: [], datasets: [
-                        { label: `${OWNER_NAME}'s Revenue`, borderColor: '#14b8a6', backgroundColor: 'rgba(20, 184, 166, 0.1)', tension: 0.3, fill: true },
-                        { label: 'Local Market Average', borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.1)', tension: 0.3, borderDash: [5, 5], fill: true }
-                    ]}, options: chartOptions(value => '$' + value.toLocaleString())
-                });
+                initializeChart('revenue-chart', 'line', chartOptions(value => '$' + value.toLocaleString()), [
+                    { label: `${OWNER_NAME}'s Revenue`, borderColor: '#14b8a6', backgroundColor: 'rgba(20, 184, 166, 0.1)', tension: 0.3, fill: true },
+                    { label: 'Local Market Average', borderColor: '#64748b', backgroundColor: 'rgba(100, 116, 139, 0.1)', tension: 0.3, borderDash: [5, 5], fill: true }
+                ]);
 
-                occupancyChartInstance = new Chart(document.getElementById('occupancy-chart').getContext('2d'), {
-                    type: 'bar', data: { labels: [], datasets: [
-                        { label: `${OWNER_NAME}'s Occupancy %`, data: [], backgroundColor: '#14b8a6' },
-                        { label: 'Local Market Average %', data: [], backgroundColor: '#64748b' }
-                    ]}, options: chartOptions(value => value + '%', true, true)
-                });
+                initializeChart('occupancy-chart', 'bar', chartOptions(value => value + '%', true, true), [
+                    { label: `${OWNER_NAME}'s Occupancy %`, data: [], backgroundColor: '#14b8a6' },
+                    { label: 'Local Market Average %', data: [], backgroundColor: '#64748b' }
+                ]);
                 
-                futureOccupancyChartInstance = new Chart(document.getElementById('future-occupancy-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + '%')});
-                bookingWindowChartInstance = new Chart(document.getElementById('booking-window-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + ' days')});
-                cancellationChartInstance = new Chart(document.getElementById('cancellation-chart').getContext('2d'), { type: 'line', options: chartOptions(value => value + '%')});
+                initializeChart('future-occupancy-chart', 'line', chartOptions(value => value + '%'), []);
+                initializeChart('booking-window-chart', 'line', chartOptions(value => value + ' days'), []);
+                initializeChart('cancellation-chart', 'line', chartOptions(value => value + '%'), []);
 
-                crossMarketChartInstance = new Chart(document.getElementById('cross-market-chart').getContext('2d'), {
-                    type: 'line', data: { labels: [], datasets: []}, 
-                    options: chartOptions(value => '$' + value.toLocaleString())
-                });
+                initializeChart('cross-market-chart', 'line', chartOptions(value => '$' + value.toLocaleString()), []);
             }
 
             const updateAllDashboards = (listingId) => {
@@ -643,7 +628,6 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                 const analysis = processDataForProperty(listingId);
                 if (!analysis) return;
                 renderRevenueDashboard(analysis);
-                renderOccupancyDashboard(analysis);
                 renderCrossMarketDashboard(analysis);
                 renderBookingInsightsDashboard(analysis);
             };
@@ -699,7 +683,7 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
             });
             
             personalizeUI();
-            initializeCharts();
+            initializeAllCharts();
             const initialId = populateDropdowns();
             if (initialId) {
                 updateAllDashboards(initialId);
@@ -731,8 +715,4 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
     </script>
 </body>
 </html>
-
-
-
-
 
