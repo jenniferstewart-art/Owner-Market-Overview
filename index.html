@@ -346,8 +346,6 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                 const competitorTotals = {};
                 const selectedMarket = selectedProperty.market;
                 
-                const competitorOccupancyPoints = [];
-
                 filteredData.forEach((row) => {
                     const month = row.month;
                     if (row.listing_id === listingId) {
@@ -475,7 +473,6 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                     if (!competitorDetails) return '';
 
                     const fullAddress = competitorDetails.property_address;
-                    const zipCode = competitorDetails.zip_code;
                     let displayLocation = fullAddress;
 
                     if (fullAddress) {
@@ -539,13 +536,17 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
                 const allMarketInsights = processAllMarketBookingInsights();
                 const currentMarket = analysis.currentMarket;
                 
-                const updateChart = (chartInstance, datasets) => {
+                const updateChart = (chartInstance, datasets, isBar = false) => {
                     if(!chartInstance) return;
                     chartInstance.data.labels = allMarketInsights.labels;
                     chartInstance.data.datasets = datasets.map(dataset => {
                         const color = MARKET_COLORS[dataset.label] || MARKET_COLORS['default'];
                         const isCurrent = dataset.label === currentMarket;
-                        return { ...dataset, borderColor: color, borderWidth: isCurrent ? 4 : 2, pointBackgroundColor: color };
+                        
+                        if (isBar) {
+                            return { ...dataset, backgroundColor: color, borderWidth: isCurrent ? 2 : 0, borderColor: '#f59e0b' };
+                        }
+                        return { ...dataset, borderColor: color, borderWidth: isCurrent ? 4 : 2, pointBackgroundColor: color, tension: 0.3, fill: false };
                     });
                     chartInstance.update();
                 };
@@ -730,4 +731,5 @@ sv-001,owner-tn,"909 Smoky Vw, Sevierville, TN","Sevierville, TN",37862,3,2,6,"H
     </script>
 </body>
 </html>
+
 
